@@ -22,9 +22,14 @@ python app.py
 
 ## デプロイ
 
-このアプリは Flask + SQLite のサーバーアプリです。Netlify の静的サイトホスティングではそのまま動かないため、Render などの Python Web サービスで動かします。
+このアプリは Flask + SQLite のサーバーアプリです。Netlify の静的サイトホスティングではそのまま動かないため、Render の Python Web Service で動かします。
 
-Render では次の設定を使います。
+`render.yaml` を含めているため、Render では Blueprint としてこのリポジトリを接続できます。
 
 - Build Command: `pip install -r requirements.txt`
 - Start Command: `gunicorn --bind 0.0.0.0:$PORT app:app`
+
+無料プランではサービスのファイルシステムが再デプロイや再起動で消えるため、SQLite の登録データは永続化されません。データを残したい場合は Render の Persistent Disk を使い、環境変数を次のように設定します。
+
+- `DATABASE_PATH`: `/opt/render/project/src/storage/innovation_board.sqlite3`
+- `BACKUP_DIR`: `/opt/render/project/src/storage/backups`

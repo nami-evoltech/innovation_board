@@ -8,19 +8,22 @@ from flask import Flask, flash, g, jsonify, redirect, render_template, request, 
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, "innovation_board.sqlite3")
-BACKUP_DIR = os.path.join(BASE_DIR, "backups")
+DATABASE = os.environ.get("DATABASE_PATH", os.path.join(BASE_DIR, "innovation_board.sqlite3"))
+BACKUP_DIR = os.environ.get("BACKUP_DIR", os.path.join(BASE_DIR, "backups"))
 STATUSES = ["未検討", "検討中", "採用候補", "採用", "保留", "却下"]
 CATEGORIES = ["新規サービス", "業務改善", "マーケティング", "技術活用", "パートナー連携", "その他"]
 
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-innovation-board"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-innovation-board")
 app.config["JSON_AS_ASCII"] = False
 
 
 def get_db():
     if "db" not in g:
+        database_dir = os.path.dirname(DATABASE)
+        if database_dir:
+            os.makedirs(database_dir, exist_ok=True)
         g.db = sqlite3.connect(DATABASE)
         g.db.row_factory = sqlite3.Row
     return g.db
