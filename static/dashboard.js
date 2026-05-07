@@ -111,4 +111,4 @@ document.querySelectorAll("[data-chart-filter]").forEach((button) => {
   button.addEventListener("click", () => applyChartMode(button.dataset.chartFilter));
 });
 
-applyChartMode("top10");
+applyChartMode("all");
