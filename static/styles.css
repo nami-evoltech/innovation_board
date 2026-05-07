@@ -23,6 +23,7 @@
 }
 
 body {
+  position: relative;
   margin: 0;
   background:
     linear-gradient(135deg, rgba(0, 109, 119, 0.08) 0 18%, transparent 18% 100%),
@@ -32,6 +33,36 @@ body {
   color: var(--text);
   font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, system-ui, sans-serif;
   line-height: 1.6;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(116deg, transparent 0 74px, rgba(0, 109, 119, 0.12) 75px, transparent 77px),
+    repeating-linear-gradient(64deg, transparent 0 112px, rgba(217, 119, 6, 0.09) 113px, transparent 115px);
+  opacity: 0.68;
+  transform: translate3d(0, 0, 0);
+  animation: drift-lines 24s linear infinite;
+}
+
+@keyframes drift-lines {
+  from {
+    transform: translate3d(-34px, -22px, 0);
+  }
+
+  to {
+    transform: translate3d(34px, 22px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
 }
 
 a {
