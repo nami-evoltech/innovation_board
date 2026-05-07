@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.log
+*.sqlite3
+backups/
+*.sqlite3.corrupt-*
+*.sqlite3.recovery-attempt
+recovery_fragments.json

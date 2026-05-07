@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'new' %}アイデア登録{% else %}アイデア編集{% endif %} | InnovationBoard{% endblock %}
+{% block content %}
+<section class="page-title">
+  <div>
+    <p class="eyebrow">入力</p>
+    <h1>{% if mode == 'new' %}アイデア登録{% else %}アイデア編集{% endif %}</h1>
+  </div>
+</section>
+
+<form class="idea-form" method="post">
+  <section class="form-section">
+    <h2>基本情報</h2>
+    <label>アイデア名<input name="title" required value="{{ idea.title if idea else '' }}"></label>
+    <label>アイデア内容<textarea name="description" rows="5">{{ idea.description if idea else '' }}</textarea></label>
+    <div class="form-grid">
+      <label>テーマ
+        <select name="theme_id">
+          <option value="">テーマなし</option>
+          {% for theme in themes %}
+            <option value="{{ theme.id }}" {% if idea and idea.theme_id == theme.id %}selected{% endif %}>{{ theme.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>カテゴリ
+        <select name="category">
+          {% for category in categories %}
+            <option value="{{ category }}" {% if idea and idea.category == category %}selected{% endif %}>{{ category }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>投稿者<input name="author" value="{{ idea.author if idea else '' }}"></label>
+      <label>投票数<input type="number" min="0" name="vote_count" value="{{ idea.vote_count if idea else 0 }}"></label>
+      <label>ステータス
+        <select name="status">
+          {% for status in statuses %}
+            <option value="{{ status }}" {% if idea and idea.status == status %}selected{% endif %}>{{ status }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+    {% if mode == 'edit' %}
+      <label>ステータス変更理由<textarea name="status_reason" rows="2"></textarea></label>
+    {% endif %}
+  </section>
+
+  <section class="form-section">
+    <h2>ICE評価</h2>
+    <div class="form-grid score-grid">
+      <label>Impact<input type="number" min="1" max="10" name="impact" value="{{ idea.impact if idea else 1 }}"></label>
+      <label>Confidence<input type="number" min="1" max="10" name="confidence" value="{{ idea.confidence if idea else 1 }}"></label>
+      <label>Ease<input type="number" min="1" max="10" name="ease" value="{{ idea.ease if idea else 1 }}"></label>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h2>深掘りメモ</h2>
+    <label>良いと思われた理由<textarea name="good_points" rows="3">{{ idea.good_points if idea else '' }}</textarea></label>
+    <label>課題・懸念点<textarea name="concerns" rows="3">{{ idea.concerns if idea else '' }}</textarea></label>
+    <label>想定効果<textarea name="expected_effect" rows="3">{{ idea.expected_effect if idea else '' }}</textarea></label>
+    <label>次にやること<textarea name="next_action" rows="3">{{ idea.next_action if idea else '' }}</textarea></label>
+    <label>メモ<textarea name="memo" rows="3">{{ idea.memo if idea else '' }}</textarea></label>
+  </section>
+
+  <div class="form-actions">
+    <button class="primary-button" type="submit">保存</button>
+    {% if idea and idea.id %}
+      <a class="secondary-button" href="{{ url_for('idea_detail', idea_id=idea.id) }}">戻る</a>
+    {% else %}
+      <a class="secondary-button" href="{{ url_for('themes') }}">戻る</a>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'edit' %}テーマ編集{% else %}テーマ登録{% endif %} | InnovationBoard{% endblock %}
+{% block content %}
+<section class="page-title">
+  <div>
+    <p class="eyebrow">Theme Setup</p>
+    <h1>{% if mode == 'edit' %}テーマ編集{% else %}テーマ登録{% endif %}</h1>
+  </div>
+  <div class="page-actions">
+    <a class="secondary-button" href="{{ url_for('themes') }}">テーマ一覧</a>
+  </div>
+</section>
+
+<form class="idea-form" method="post">
+  <section class="form-section">
+    <h2>テーマ情報</h2>
+    <label>テーマ名<input name="name" required value="{{ theme.name if theme else '' }}"></label>
+    <label>実施日<input type="date" name="meeting_date" value="{{ theme.meeting_date if theme else '' }}"></label>
+    <label>目的<textarea name="objective" rows="4">{{ theme.objective if theme else '' }}</textarea></label>
+    <label>メモ<textarea name="memo" rows="4">{{ theme.memo if theme else '' }}</textarea></label>
+  </section>
+  <div class="form-actions">
+    <button class="primary-button" type="submit">保存</button>
+    {% if mode == 'edit' and theme.id %}
+      <a class="secondary-button" href="{{ url_for('theme_detail', theme_id=theme.id) }}">戻る</a>
+    {% else %}
+      <a class="secondary-button" href="{{ url_for('themes') }}">戻る</a>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}

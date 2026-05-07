@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ theme.name }} | InnovationBoard{% endblock %}
+{% block content %}
+<section class="page-title">
+  <div>
+    <p class="eyebrow">{{ theme.meeting_date or '日付未設定' }}</p>
+    <h1>{{ theme.name }}</h1>
+    <p class="lead">{{ theme.objective or 'このテーマの目的はまだ入力されていません。' }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="secondary-button" href="{{ url_for('themes') }}">テーマ一覧</a>
+    <a class="secondary-button" href="{{ url_for('edit_theme', theme_id=theme.id) }}">編集</a>
+    <form method="post" action="{{ url_for('delete_theme', theme_id=theme.id) }}" onsubmit="return confirm('このテーマを削除しますか？紐づく付箋項目はテーマなしに戻します。');">
+      <button class="danger-button" type="submit">削除</button>
+    </form>
+  </div>
+</section>
+
+<section class="two-column">
+  <article class="panel">
+    <h2>付箋項目を追加</h2>
+    <form class="comment-form" id="idea-form" method="post" data-async-idea-form>
+      <input
+        class="japanese-input"
+        name="title"
+        required
+        placeholder="付箋に書かれた項目"
+        lang="ja"
+        inputmode="text"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        enterkeyhint="next"
+        {% if request.args.get('focus') == 'idea' %}data-focus-on-load="true"{% endif %}>
+      <textarea class="japanese-input" name="description" rows="3" placeholder="補足メモ" lang="ja" inputmode="text" spellcheck="false"></textarea>
+      <div class="form-grid compact-grid">
+        <label>投票数<input type="number" min="0" name="vote_count" value="0"></label>
+        <label>記入者<input name="author" placeholder="任意"></label>
+      </div>
+      <button type="submit">追加</button>
+    </form>
+  </article>
+  <article class="panel">
+    <h2>テーマメモ</h2>
+    <p class="preline">{{ theme.memo or 'メモはまだありません。' }}</p>
+  </article>
+</section>
+
+<section class="table-panel compact-table-panel">
+  <div class="section-header">
+    <h2>付箋項目ランキング</h2>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>付箋項目</th>
+        <th>投票数</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody data-idea-list>
+      {% for idea in ideas %}
+        <tr data-idea-row>
+          <td><strong>{{ idea.title }}</strong></td>
+          <td><div class="bar-cell"><span style="width: {{ [idea.vote_count * 8, 100] | min }}%"></span>{{ idea.vote_count }}票</div></td>
+          <td>
+            <div class="row-actions">
+              <a class="text-button" href="{{ url_for('idea_detail', idea_id=idea.id) }}">詳細</a>
+              <button class="danger-button" type="button" data-modal-open="delete-idea-{{ idea.id }}">削除</button>
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr data-empty-row><td colspan="3" class="empty">まだ付箋項目がありません。</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% for idea in ideas %}
+  <div class="modal-backdrop" id="delete-idea-{{ idea.id }}" aria-hidden="true">
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-idea-title-{{ idea.id }}">
+      <h2 id="delete-idea-title-{{ idea.id }}">付箋項目を削除しますか？</h2>
+      <p>「{{ idea.title }}」を削除します。コメントや検討履歴も一緒に削除されます。</p>
+      <div class="modal-actions">
+        <button class="secondary-button" type="button" data-modal-close>キャンセル</button>
+        <form method="post" action="{{ url_for('delete_idea', idea_id=idea.id) }}">
+          <button class="danger-button" type="submit">削除する</button>
+        </form>
+      </div>
+    </section>
+  </div>
+{% endfor %}
+
+<div class="modal-backdrop" id="delete-idea-modal" aria-hidden="true">
+  <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-idea-modal-title">
+    <h2 id="delete-idea-modal-title">付箋項目を削除しますか？</h2>
+    <p>「<span data-delete-idea-title></span>」を削除します。コメントや検討履歴も一緒に削除されます。</p>
+    <div class="modal-actions">
+      <button class="secondary-button" type="button" data-modal-close>キャンセル</button>
+      <form method="post" data-delete-idea-form>
+        <button class="danger-button" type="submit">削除する</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<script src="{{ url_for('static', filename='modal.js') }}"></script>
+<script src="{{ url_for('static', filename='theme-detail.js') }}"></script>
+{% endblock %}

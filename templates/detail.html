@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ idea.title }} | InnovationBoard{% endblock %}
+{% block content %}
+<section class="page-title">
+  <div>
+    <p class="eyebrow">{{ idea.theme_name or 'テーマなし' }}</p>
+    <h1>{{ idea.title }}</h1>
+  </div>
+  <div class="page-actions">
+    {% if idea.theme_id %}
+      <a class="secondary-button" href="{{ url_for('theme_detail', theme_id=idea.theme_id) }}">テーマへ戻る</a>
+    {% else %}
+      <a class="secondary-button" href="{{ url_for('themes') }}">テーマ一覧</a>
+    {% endif %}
+    <a class="secondary-button" href="{{ url_for('edit_idea', idea_id=idea.id) }}">編集</a>
+    <button class="danger-button" type="button" data-modal-open="delete-idea-detail">削除</button>
+  </div>
+</section>
+
+<section class="detail-grid">
+  <article class="panel">
+    <h2>付箋内容</h2>
+    <p class="preline">{{ idea.description or '未入力' }}</p>
+  </article>
+  <article class="panel score-card">
+    <h2>投票結果</h2>
+    <dl>
+      <div><dt>投票数</dt><dd>{{ idea.vote_count }}票</dd></div>
+      <div><dt>テーマ</dt><dd class="small-dd">{{ idea.theme_name or 'テーマなし' }}</dd></div>
+    </dl>
+  </article>
+</section>
+
+<form class="idea-form autosave-form" method="post" action="{{ url_for('update_deep_dive', idea_id=idea.id) }}">
+  <section class="form-section">
+    <div class="section-header">
+      <h2>補足・深掘りメモ</h2>
+      <span class="autosave-status" data-autosave-status>入力すると自動保存されます</span>
+    </div>
+    <label>付箋内容の補足<textarea name="description" rows="4">{{ idea.description }}</textarea></label>
+    <label>良いと思われた理由<textarea name="good_points" rows="3">{{ idea.good_points }}</textarea></label>
+    <label>課題・懸念点<textarea name="concerns" rows="3">{{ idea.concerns }}</textarea></label>
+    <label>想定効果<textarea name="expected_effect" rows="3">{{ idea.expected_effect }}</textarea></label>
+    <label>次に確認すること・次アクション<textarea name="next_action" rows="3">{{ idea.next_action }}</textarea></label>
+    <label>検討メモ<textarea name="memo" rows="5">{{ idea.memo }}</textarea></label>
+  </section>
+</form>
+
+<section class="comment-section">
+  <article class="panel">
+    <h2>コメント</h2>
+    <form class="comment-form" method="post" action="{{ url_for('add_comment', idea_id=idea.id) }}">
+      <input name="created_by" placeholder="記入者">
+      <textarea name="comment" rows="3" placeholder="コメント内容"></textarea>
+      <button type="submit">追加</button>
+    </form>
+    <div class="timeline">
+      {% for comment in comments %}
+        <div>
+          <strong>{{ comment.created_by or '匿名' }}</strong>
+          <time>{{ comment.created_at }}</time>
+          <p class="preline">{{ comment.comment }}</p>
+        </div>
+      {% else %}
+        <p class="empty">コメントはまだありません。</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+<div class="modal-backdrop" id="delete-idea-detail" aria-hidden="true">
+  <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-idea-detail-title">
+    <h2 id="delete-idea-detail-title">付箋項目を削除しますか？</h2>
+    <p>「{{ idea.title }}」を削除します。コメントや検討履歴も一緒に削除されます。</p>
+    <div class="modal-actions">
+      <button class="secondary-button" type="button" data-modal-close>キャンセル</button>
+      <form method="post" action="{{ url_for('delete_idea', idea_id=idea.id) }}">
+        <button class="danger-button" type="submit">削除する</button>
+      </form>
+    </div>
+  </section>
+</div>
+<script src="{{ url_for('static', filename='detail.js') }}"></script>
+<script src="{{ url_for('static', filename='modal.js') }}"></script>
+{% endblock %}

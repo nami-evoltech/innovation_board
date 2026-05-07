@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}ダッシュボード | InnovationBoard{% endblock %}
+{% block content %}
+<section class="page-title">
+  <div>
+    <p class="eyebrow">Decision Intelligence</p>
+    <h1>テーマ別 投票ランキング</h1>
+    <p class="lead">会議テーマごとに、付箋項目のドット投票結果をランキングで確認できます。</p>
+  </div>
+  <div class="page-actions">
+    <a class="primary-button" href="{{ url_for('new_theme') }}">テーマ登録</a>
+    <a class="secondary-button" href="{{ url_for('themes') }}">テーマ一覧</a>
+  </div>
+</section>
+
+<section class="dashboard-controls" aria-label="グラフ表示設定">
+  <div class="segmented-control" role="group" aria-label="グラフ表示件数">
+    <button type="button" data-chart-filter="all">全て</button>
+    <button type="button" data-chart-filter="nonzero">0件は除く</button>
+    <button type="button" data-chart-filter="top10" aria-pressed="true">Top10</button>
+  </div>
+</section>
+
+<section class="theme-ranking-grid">
+  {% for item in theme_rankings %}
+    <article class="panel">
+      <div class="section-header">
+        <div>
+          <h2 class="dashboard-theme-title">{{ item.theme.name }}</h2>
+        </div>
+        <a class="text-button" href="{{ url_for('theme_detail', theme_id=item.theme.id) }}">開く</a>
+      </div>
+      <div class="theme-summary-grid">
+        <div><span>付箋件数</span><strong>{{ item.theme.idea_count }}</strong></div>
+        <div><span>総投票数</span><strong>{{ item.theme.vote_total }}</strong></div>
+        <div><span>最多得票</span><strong>{{ item.top_idea.vote_count if item.top_idea else 0 }}</strong><small>{{ item.top_idea.title if item.top_idea else '未登録' }}</small></div>
+        <div><span>投票あり率</span><strong>{{ item.voted_rate }}%</strong></div>
+        <div><span>投票なし</span><strong>{{ item.theme.unvoted_idea_count or 0 }}</strong></div>
+      </div>
+      {% if item.ideas %}
+        <div class="vote-chart-wrap">
+          <canvas
+            class="vote-chart"
+            data-labels='{{ item.ideas | map(attribute="title") | list | tojson }}'
+            data-values='{{ item.ideas | map(attribute="vote_count") | list | tojson }}'
+            data-ids='{{ item.ideas | map(attribute="id") | list | tojson }}'>
+          </canvas>
+        </div>
+      {% else %}
+        <p class="empty">まだ付箋項目がありません。</p>
+      {% endif %}
+    </article>
+  {% else %}
+    <article class="panel">
+      <p class="empty">まだ投票ランキングを表示できるテーマがありません。</p>
+    </article>
+  {% endfor %}
+</section>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+{% endblock %}

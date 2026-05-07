@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}InnovationBoard{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="{{ url_for('dashboard') }}">
+      <span class="brand-mark">IB</span>
+      <span class="brand-name">InnovationBoard</span>
+    </a>
+    <nav>
+      <a href="{{ url_for('dashboard') }}">ダッシュボード</a>
+      <a href="{{ url_for('themes') }}">テーマ</a>
+      <a href="{{ url_for('history') }}">履歴</a>
+    </nav>
+  </header>
+
+  <main class="shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-list">
+          {% for category, message in messages %}
+            <p class="flash {{ category }}">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

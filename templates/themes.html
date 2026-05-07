@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}テーマ一覧 | InnovationBoard{% endblock %}
+{% block content %}
+<section class="page-title">
+  <div>
+    <p class="eyebrow">Brainstorm Themes</p>
+    <h1>テーマ一覧</h1>
+    <p class="lead">会議ごとのテーマを作成し、出てきた付箋項目とドット投票数を記録します。</p>
+  </div>
+  <div class="page-actions">
+    <a class="primary-button" href="{{ url_for('new_theme') }}">テーマ登録</a>
+  </div>
+</section>
+
+<section class="theme-grid">
+  {% for theme in themes %}
+    <article class="theme-card large">
+      <a class="theme-card-main" href="{{ url_for('theme_detail', theme_id=theme.id) }}">
+        <span>{{ theme.meeting_date or '日付未設定' }}</span>
+        <strong>{{ theme.name }}</strong>
+        <p>{{ theme.objective or '目的未入力' }}</p>
+        <div class="theme-stats">
+          <small>付箋 {{ theme.idea_count }}件</small>
+          <small>投票あり {{ theme.voted_idea_count or 0 }}件</small>
+          <small>投票なし {{ theme.unvoted_idea_count or 0 }}件</small>
+        </div>
+      </a>
+      <div class="theme-card-actions">
+        <a class="text-button" href="{{ url_for('theme_detail', theme_id=theme.id) }}">開く</a>
+        <a class="secondary-button" href="{{ url_for('edit_theme', theme_id=theme.id) }}">編集</a>
+        <form method="post" action="{{ url_for('delete_theme', theme_id=theme.id) }}" onsubmit="return confirm('このテーマを削除しますか？紐づく付箋項目はテーマなしに戻します。');">
+          <button class="danger-button" type="submit">削除</button>
+        </form>
+      </div>
+    </article>
+  {% else %}
+    <article class="panel">
+      <p class="empty">まだテーマがありません。</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}
