@@ -19,3 +19,12 @@ python app.py
 ```
 
 ブラウザで http://127.0.0.1:5000 を開きます。
+
+## デプロイ
+
+このアプリは Flask + SQLite のサーバーアプリです。Netlify の静的サイトホスティングではそのまま動かないため、Render などの Python Web サービスで動かします。
+
+Render では次の設定を使います。
+
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `gunicorn app:app`
