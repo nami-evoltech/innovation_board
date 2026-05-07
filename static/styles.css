@@ -35,32 +35,58 @@ body {
   line-height: 1.6;
 }
 
-body::before {
+body::before,
+body::after {
   content: "";
   position: fixed;
-  inset: -20%;
+  inset: -18%;
   z-index: -1;
   pointer-events: none;
-  background:
-    repeating-linear-gradient(116deg, transparent 0 74px, rgba(0, 109, 119, 0.12) 75px, transparent 77px),
-    repeating-linear-gradient(64deg, transparent 0 112px, rgba(217, 119, 6, 0.09) 113px, transparent 115px);
-  opacity: 0.68;
-  transform: translate3d(0, 0, 0);
-  animation: drift-lines 24s linear infinite;
 }
 
-@keyframes drift-lines {
+body::before {
+  background:
+    radial-gradient(circle at 18% 24%, rgba(0, 109, 119, 0.17), transparent 24%),
+    radial-gradient(circle at 78% 18%, rgba(217, 119, 6, 0.13), transparent 22%),
+    radial-gradient(circle at 64% 82%, rgba(7, 59, 76, 0.12), transparent 26%);
+  filter: blur(18px);
+  opacity: 0.92;
+  animation: ambient-field 28s ease-in-out infinite alternate;
+}
+
+body::after {
+  background:
+    linear-gradient(135deg, transparent 0 38%, rgba(0, 245, 255, 0.24) 39%, rgba(0, 245, 255, 0.24) 39.42%, transparent 40.5% 100%),
+    linear-gradient(225deg, transparent 0 58%, rgba(255, 132, 0, 0.22) 59%, rgba(255, 132, 0, 0.22) 59.42%, transparent 60.5% 100%);
+  background-size: 160% 160%;
+  opacity: 0.68;
+  filter: drop-shadow(0 0 10px rgba(0, 245, 255, 0.24)) drop-shadow(0 0 10px rgba(255, 132, 0, 0.20));
+  animation: current-lines 30s ease-in-out infinite alternate;
+}
+
+@keyframes ambient-field {
   from {
-    transform: translate3d(-34px, -22px, 0);
+    transform: translate3d(-2%, -1%, 0) scale(1);
   }
 
   to {
-    transform: translate3d(34px, 22px, 0);
+    transform: translate3d(2%, 1.6%, 0) scale(1.04);
+  }
+}
+
+@keyframes current-lines {
+  from {
+    background-position: 0% 0%, 100% 0%;
+  }
+
+  to {
+    background-position: 100% 100%, 0% 100%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body::before {
+  body::before,
+  body::after {
     animation: none;
   }
 }
@@ -271,10 +297,18 @@ button {
 }
 
 .primary-button:hover,
-button:hover {
+button:hover,
+.secondary-button:hover,
+.text-button:hover {
   background: linear-gradient(135deg, #008891, var(--primary-dark));
   transform: translateY(-1px);
   box-shadow: 0 16px 34px rgba(0, 109, 119, 0.28);
+}
+
+.secondary-button:hover,
+.text-button:hover {
+  border-color: rgba(0, 109, 119, 0.34);
+  color: #ffffff;
 }
 
 .secondary-button,
@@ -296,7 +330,8 @@ button:hover {
   background: #fff5f5;
   border-color: rgba(180, 35, 24, 0.44);
   color: var(--danger);
-  box-shadow: none;
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(180, 35, 24, 0.16);
 }
 
 .danger-button:disabled {
