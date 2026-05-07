@@ -246,21 +246,6 @@ def fetch_theme(theme_id):
 @app.route("/")
 def dashboard():
     db = get_db()
-    recent_themes = db.execute(
-        """
-        SELECT
-            themes.*,
-            COUNT(ideas.id) AS idea_count,
-            SUM(CASE WHEN ideas.vote_count > 0 THEN 1 ELSE 0 END) AS voted_idea_count,
-            SUM(CASE WHEN ideas.id IS NOT NULL AND ideas.vote_count = 0 THEN 1 ELSE 0 END) AS unvoted_idea_count,
-            COALESCE(SUM(ideas.vote_count), 0) AS vote_total
-        FROM themes
-        LEFT JOIN ideas ON ideas.theme_id = themes.id
-        GROUP BY themes.id
-        ORDER BY themes.meeting_date DESC, themes.updated_at DESC
-        LIMIT 5
-        """
-    ).fetchall()
     ranking_themes = db.execute(
         """
         SELECT
@@ -288,7 +273,7 @@ def dashboard():
         top_idea = top_ideas[0] if top_ideas else None
         voted_rate = round(((theme["voted_idea_count"] or 0) / theme["idea_count"]) * 100) if theme["idea_count"] else 0
         theme_rankings.append({"theme": theme, "ideas": top_ideas, "top_idea": top_idea, "voted_rate": voted_rate})
-    return render_template("dashboard.html", recent_themes=recent_themes, theme_rankings=theme_rankings)
+    return render_template("dashboard.html", theme_rankings=theme_rankings)
 
 
 @app.route("/themes")

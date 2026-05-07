@@ -1,6 +1,6 @@
 # InnovationBoard
 
-ブレスト後の会議テーマ、付箋アイデア、ドット投票、ICE評価、検討履歴を記録する Flask + SQLite アプリです。
+ブレスト後の会議テーマ、付箋アイデア、ドット投票、ICE評価、検討履歴を記録する Flask アプリです。
 
 ## 前提条件
 
@@ -31,18 +31,3 @@ python app.py
 - Environment Variable: `DATABASE_URL` に Neon の接続URLを設定
 
 `DATABASE_URL` がない場合は、ローカル用の SQLite ファイル `innovation_board.sqlite3` を使います。
-
-## SQLite から PostgreSQL へ移行
-
-Neon に空の PostgreSQL データベースを作成し、接続URLを `DATABASE_URL` に設定してから実行します。
-
-```powershell
-$env:DATABASE_URL="postgresql://..."
-python migrate_sqlite_to_postgres.py
-```
-
-移行先に既にデータがある場合は停止します。移行先を空にして入れ直す場合だけ `--replace` を付けます。
-
-```powershell
-python migrate_sqlite_to_postgres.py --replace
-```
