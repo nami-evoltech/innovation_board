@@ -9,7 +9,9 @@ from flask import Flask, flash, g, jsonify, redirect, render_template, request, 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.environ.get("DATABASE_PATH", os.path.join(BASE_DIR, "innovation_board.sqlite3"))
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
 BACKUP_DIR = os.environ.get("BACKUP_DIR", os.path.join(BASE_DIR, "backups"))
+DB_DRIVER = "postgres" if DATABASE_URL else "sqlite"
 STATUSES = ["未検討", "検討中", "採用候補", "採用", "保留", "却下"]
 CATEGORIES = ["新規サービス", "業務改善", "マーケティング", "技術活用", "パートナー連携", "その他"]
 
@@ -19,13 +21,38 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-innovation-board")
 app.config["JSON_AS_ASCII"] = False
 
 
+class PostgresDB:
+    def __init__(self, database_url):
+        import psycopg
+        from psycopg.rows import dict_row
+
+        self.connection = psycopg.connect(database_url, row_factory=dict_row)
+
+    def execute(self, sql, params=()):
+        return self.connection.execute(sql.replace("?", "%s"), params)
+
+    def executescript(self, script):
+        statements = [statement.strip() for statement in script.split(";") if statement.strip()]
+        for statement in statements:
+            self.execute(statement)
+
+    def commit(self):
+        self.connection.commit()
+
+    def close(self):
+        self.connection.close()
+
+
 def get_db():
     if "db" not in g:
-        database_dir = os.path.dirname(DATABASE)
-        if database_dir:
-            os.makedirs(database_dir, exist_ok=True)
-        g.db = sqlite3.connect(DATABASE)
-        g.db.row_factory = sqlite3.Row
+        if DB_DRIVER == "postgres":
+            g.db = PostgresDB(DATABASE_URL)
+        else:
+            database_dir = os.path.dirname(DATABASE)
+            if database_dir:
+                os.makedirs(database_dir, exist_ok=True)
+            g.db = sqlite3.connect(DATABASE)
+            g.db.row_factory = sqlite3.Row
     return g.db
 
 
@@ -38,10 +65,11 @@ def close_db(_error=None):
 
 def init_db():
     db = get_db()
+    id_type = "SERIAL PRIMARY KEY" if DB_DRIVER == "postgres" else "INTEGER PRIMARY KEY AUTOINCREMENT"
     db.executescript(
-        """
+        f"""
         CREATE TABLE IF NOT EXISTS themes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             name TEXT NOT NULL,
             meeting_date TEXT NOT NULL DEFAULT '',
             objective TEXT NOT NULL DEFAULT '',
@@ -51,7 +79,7 @@ def init_db():
         );
 
         CREATE TABLE IF NOT EXISTS ideas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             theme_id INTEGER,
             title TEXT NOT NULL,
             description TEXT NOT NULL DEFAULT '',
@@ -73,7 +101,7 @@ def init_db():
         );
 
         CREATE TABLE IF NOT EXISTS comments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             idea_id INTEGER NOT NULL,
             comment TEXT NOT NULL,
             created_by TEXT NOT NULL DEFAULT '',
@@ -82,7 +110,7 @@ def init_db():
         );
 
         CREATE TABLE IF NOT EXISTS status_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {id_type},
             idea_id INTEGER NOT NULL,
             old_status TEXT NOT NULL,
             new_status TEXT NOT NULL,
@@ -97,6 +125,16 @@ def init_db():
 
 
 def has_column(table, column):
+    if DB_DRIVER == "postgres":
+        row = get_db().execute(
+            """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = current_schema() AND table_name = ? AND column_name = ?
+            """,
+            (table, column),
+        ).fetchone()
+        return row is not None
     rows = get_db().execute(f"PRAGMA table_info({table})").fetchall()
     return any(row["name"] == column for row in rows)
 
@@ -117,6 +155,8 @@ def now_text():
 
 
 def backup_database(label):
+    if DB_DRIVER == "postgres":
+        return None
     os.makedirs(BACKUP_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     backup_path = os.path.join(BACKUP_DIR, f"innovation_board-{label}-{timestamp}.sqlite3")
@@ -346,12 +386,14 @@ def theme_detail(theme_id):
         timestamp = now_text()
         vote_count = max(0, to_int(request.form.get("vote_count"), 0))
         db = get_db()
+        returning = "RETURNING id" if DB_DRIVER == "postgres" else ""
         cursor = db.execute(
-            """
+            f"""
             INSERT INTO ideas (
                 theme_id, title, description, category, author, vote_count, status,
                 impact, confidence, ease, ice_score, created_at, updated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, 1, 1, ?, ?)
+            {returning}
             """,
             (
                 theme_id,
@@ -365,6 +407,7 @@ def theme_detail(theme_id):
                 timestamp,
             ),
         )
+        new_idea_id = cursor.fetchone()["id"] if DB_DRIVER == "postgres" else cursor.lastrowid
         db.execute("UPDATE themes SET updated_at = ? WHERE id = ?", (timestamp, theme_id))
         db.commit()
         if request.headers.get("X-Requested-With") == "fetch":
@@ -372,12 +415,12 @@ def theme_detail(theme_id):
                 {
                     "ok": True,
                     "idea": {
-                        "id": cursor.lastrowid,
+                        "id": new_idea_id,
                         "title": title,
                         "vote_count": vote_count,
                         "updated_at": timestamp,
-                        "detail_url": url_for("idea_detail", idea_id=cursor.lastrowid),
-                        "delete_url": url_for("delete_idea", idea_id=cursor.lastrowid),
+                        "detail_url": url_for("idea_detail", idea_id=new_idea_id),
+                        "delete_url": url_for("delete_idea", idea_id=new_idea_id),
                     },
                 }
             )

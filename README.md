@@ -22,14 +22,27 @@ python app.py
 
 ## デプロイ
 
-このアプリは Flask + SQLite のサーバーアプリです。Netlify の静的サイトホスティングではそのまま動かないため、Render の Python Web Service で動かします。
+このアプリは Flask のサーバーアプリです。ローカルでは SQLite、本番では `DATABASE_URL` を設定して PostgreSQL に接続できます。Netlify の静的サイトホスティングではそのまま動かないため、Render の Python Web Service で動かします。
 
 `render.yaml` を含めているため、Render では Blueprint としてこのリポジトリを接続できます。
 
 - Build Command: `pip install -r requirements.txt`
 - Start Command: `gunicorn --bind 0.0.0.0:$PORT app:app`
+- Environment Variable: `DATABASE_URL` に Neon の接続URLを設定
 
-無料プランではサービスのファイルシステムが再デプロイや再起動で消えるため、SQLite の登録データは永続化されません。データを残したい場合は Render の Persistent Disk を使い、環境変数を次のように設定します。
+`DATABASE_URL` がない場合は、ローカル用の SQLite ファイル `innovation_board.sqlite3` を使います。
 
-- `DATABASE_PATH`: `/opt/render/project/src/storage/innovation_board.sqlite3`
-- `BACKUP_DIR`: `/opt/render/project/src/storage/backups`
+## SQLite から PostgreSQL へ移行
+
+Neon に空の PostgreSQL データベースを作成し、接続URLを `DATABASE_URL` に設定してから実行します。
+
+```powershell
+$env:DATABASE_URL="postgresql://..."
+python migrate_sqlite_to_postgres.py
+```
+
+移行先に既にデータがある場合は停止します。移行先を空にして入れ直す場合だけ `--replace` を付けます。
+
+```powershell
+python migrate_sqlite_to_postgres.py --replace
+```
