@@ -109,15 +109,6 @@ def init_db():
             FOREIGN KEY (idea_id) REFERENCES ideas (id) ON DELETE CASCADE
         );
 
-        CREATE TABLE IF NOT EXISTS status_logs (
-            id {id_type},
-            idea_id INTEGER NOT NULL,
-            old_status TEXT NOT NULL,
-            new_status TEXT NOT NULL,
-            reason TEXT NOT NULL DEFAULT '',
-            created_at TEXT NOT NULL,
-            FOREIGN KEY (idea_id) REFERENCES ideas (id) ON DELETE CASCADE
-        );
         """
     )
     ensure_schema()
@@ -442,8 +433,7 @@ def idea_detail(idea_id):
         return redirect(url_for("ideas"))
     db = get_db()
     comments = db.execute("SELECT * FROM comments WHERE idea_id = ? ORDER BY created_at DESC", (idea_id,)).fetchall()
-    logs = db.execute("SELECT * FROM status_logs WHERE idea_id = ? ORDER BY created_at DESC", (idea_id,)).fetchall()
-    return render_template("detail.html", idea=idea, comments=comments, logs=logs, statuses=STATUSES)
+    return render_template("detail.html", idea=idea, comments=comments, statuses=STATUSES)
 
 
 @app.route("/ideas/<int:idea_id>/deep-dive", methods=["POST"])
@@ -506,14 +496,6 @@ def edit_idea(idea_id):
                 data["next_action"], data["memo"], timestamp, idea_id,
             ),
         )
-        if idea["status"] != data["status"]:
-            db.execute(
-                """
-                INSERT INTO status_logs (idea_id, old_status, new_status, reason, created_at)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (idea_id, idea["status"], data["status"], request.form.get("status_reason", "").strip(), timestamp),
-            )
         db.commit()
         flash("アイデアを更新しました。", "success")
         return redirect(url_for("idea_detail", idea_id=idea_id))
@@ -529,7 +511,6 @@ def delete_idea(idea_id):
     db = get_db()
     backup_database("before-idea-delete")
     db.execute("DELETE FROM comments WHERE idea_id = ?", (idea_id,))
-    db.execute("DELETE FROM status_logs WHERE idea_id = ?", (idea_id,))
     db.execute("DELETE FROM ideas WHERE id = ?", (idea_id,))
     if idea["theme_id"]:
         db.execute("UPDATE themes SET updated_at = ? WHERE id = ?", (now_text(), idea["theme_id"]))
@@ -557,36 +538,6 @@ def add_comment(idea_id):
     else:
         flash("コメント内容を入力してください。", "error")
     return redirect(url_for("idea_detail", idea_id=idea_id))
-
-
-@app.route("/history")
-def history():
-    keyword = request.args.get("keyword", "").strip()
-    db = get_db()
-    sql = """
-        SELECT logs.*, ideas.title, ideas.category, themes.name AS theme_name
-        FROM status_logs logs
-        JOIN ideas ON ideas.id = logs.idea_id
-        LEFT JOIN themes ON themes.id = ideas.theme_id
-        WHERE 1 = 1
-    """
-    params = []
-    if keyword:
-        sql += " AND (ideas.title LIKE ? OR logs.reason LIKE ? OR ideas.category LIKE ? OR themes.name LIKE ?)"
-        params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
-    sql += " ORDER BY logs.created_at DESC"
-    logs = db.execute(sql, params).fetchall()
-    archived = db.execute(
-        """
-        SELECT ideas.*, themes.name AS theme_name
-        FROM ideas
-        LEFT JOIN themes ON themes.id = ideas.theme_id
-        WHERE status IN ('採用', '保留', '却下')
-        ORDER BY ideas.updated_at DESC
-        """
-    ).fetchall()
-    return render_template("history.html", logs=logs, archived=archived)
-
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)

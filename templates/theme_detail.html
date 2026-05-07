@@ -81,7 +81,7 @@
   <div class="modal-backdrop" id="delete-idea-{{ idea.id }}" aria-hidden="true">
     <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-idea-title-{{ idea.id }}">
       <h2 id="delete-idea-title-{{ idea.id }}">付箋項目を削除しますか？</h2>
-      <p>「{{ idea.title }}」を削除します。コメントや検討履歴も一緒に削除されます。</p>
+      <p>「{{ idea.title }}」を削除します。コメントも一緒に削除されます。</p>
       <div class="modal-actions">
         <button class="secondary-button" type="button" data-modal-close>キャンセル</button>
         <form method="post" action="{{ url_for('delete_idea', idea_id=idea.id) }}">
@@ -95,7 +95,7 @@
 <div class="modal-backdrop" id="delete-idea-modal" aria-hidden="true">
   <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-idea-modal-title">
     <h2 id="delete-idea-modal-title">付箋項目を削除しますか？</h2>
-    <p>「<span data-delete-idea-title></span>」を削除します。コメントや検討履歴も一緒に削除されます。</p>
+    <p>「<span data-delete-idea-title></span>」を削除します。コメントも一緒に削除されます。</p>
     <div class="modal-actions">
       <button class="secondary-button" type="button" data-modal-close>キャンセル</button>
       <form method="post" data-delete-idea-form>

@@ -506,18 +506,6 @@ button:hover {
   width: 100%;
 }
 
-.filter-bar {
-  display: grid;
-  grid-template-columns: minmax(220px, 1fr) 180px 160px 160px auto;
-  gap: 10px;
-  margin-bottom: 16px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.76);
-  box-shadow: 0 12px 32px rgba(9, 17, 31, 0.06);
-}
-
 input,
 select,
 textarea {
@@ -986,7 +974,6 @@ time {
   .detail-grid,
   .form-grid,
   .score-grid,
-  .filter-bar,
   .theme-strip,
   .theme-grid,
   .theme-ranking-grid,
